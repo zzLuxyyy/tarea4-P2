@@ -55,5 +55,3 @@ TColaDePrioridadReservas copiarTColaDePrioridadReservas(TColaDePrioridadReservas
 void imprimirTColaDePrioridad(TColaDePrioridadReservas cp) {
 
 }
-
-
