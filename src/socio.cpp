@@ -11,6 +11,7 @@ struct rep_socio
     TFecha fechaAlta;
     int generosFavoritos[MAX_GENEROS_FAVORITOS];
     int topeGeneros;
+    nat rango;
 };
 
 TSocio crearTSocio(int ci, const char nombre[MAX_NOMBRE_SOCIO], const char apellido[MAX_APELLIDO_SOCIO], nat diaAlta, nat mesAlta, nat anioAlta, nat rango)
@@ -22,6 +23,7 @@ TSocio crearTSocio(int ci, const char nombre[MAX_NOMBRE_SOCIO], const char apell
     strcpy(nuevoSocio->apellido, apellido);
     nuevoSocio->fechaAlta = crearTFecha(diaAlta, mesAlta, anioAlta);
     nuevoSocio->topeGeneros = 0;
+    nuevoSocio->rango = rango;
 
     return nuevoSocio; // Estabas retornando rep_socio lo cual es incorrecto porque es un struct.
 }
@@ -56,7 +58,7 @@ int ciTSocio(TSocio socio)
 }
 nat rangoTSocio(TSocio socio)
 {
-    return socio->topeGeneros;
+    return socio->rango; 
 }
 
 char *nombreTSocio(TSocio socio)
