@@ -1,9 +1,9 @@
 #include "../include/tablaReserva.h"
 #include <cstdlib>
 
-// Se debe implementar mediante una tabla de dispersión abierta (hash)
 struct Entrada
 {
+    /* Nodo de la lista enlazada */
     int isbn;
     TColaDePrioridadReservas colaPrioridad;
     Entrada *siguiente;
@@ -11,28 +11,31 @@ struct Entrada
 
 struct rep_tablaTablaReserva
 {
-    Entrada **tabla;
-    int max;
-    int N;
-    int cantLibros;
+    /* Estructura de la tabla hash */
+    Entrada **tabla; // Arreglo de punteros
+    int max;         // Tamaño de la tabla
+    int N;           // Capacidad máxima de la cola
+    int cantLibros;  // Cantidad de libros dif
 };
 
 static int hash(int isbn, int max)
 {
+    /* Función hash O(1)*/
     return abs(isbn) % max;
 }
 
 TTablaReserva crearTTablaReserva(int max, int N)
 {
+    /* Crea una tabla vacía */
     TTablaReserva nuevaTabla = new rep_tablaTablaReserva;
     nuevaTabla->max = max;
     nuevaTabla->N = N;
     nuevaTabla->cantLibros = 0;
-    nuevaTabla->tabla = new Entrada *[max];
+    nuevaTabla->tabla = new Entrada *[max]; // Arreglo de punteros a listas
 
     for (int i = 0; i < max; i++)
     {
-        nuevaTabla->tabla[i] = NULL;
+        nuevaTabla->tabla[i] = NULL; // Iniciar las posiciones en NULL
     }
 
     return nuevaTabla;
@@ -40,42 +43,68 @@ TTablaReserva crearTTablaReserva(int max, int N)
 
 void insertarTTablaReserva(TTablaReserva &tabla, int isbn, TReserva reserva)
 {
-    //  Función para insertar una asociación (isbn, reserva) en la tabla de reservas.
-    //  La función asocia el isbn de un libro con su reserva.
-    //  PRE: !perteneceTTablaReserva(tabla, reserva)
-    //  La funcion es O(N + l) peor caso, siendo:
-    //    N: el parametro N usado al crear la tabla
-    //    l: la cantidad de libros para los cuales hay reservas en la tabla
+    int indice = hash(isbn, tabla->max);
+    Entrada* actual = tabla->tabla[indice];
+
+    while (actual != NULL)
+    {
+        if (actual->isbn == isbn)
+        {
+            insertarTColaDePrioridadReservas(actual->colaPrioridad, reserva);
+            return;
+        }
+        actual = actual->siguiente;
+    }
+
+    Entrada* nueva = new Entrada;
+    nueva->isbn = isbn;
+    nueva->colaPrioridad = crearTColaDePrioridadReservas(tabla->N);
+    insertarTColaDePrioridadReservas(nueva->colaPrioridad, reserva);
+
+    nueva->siguiente = tabla->tabla[indice];
+    tabla->tabla[indice] = nueva;
+    tabla->cantLibros++;
 }
 
 bool perteneceTTablaReserva(TTablaReserva tabla, int ciSocio, int isbnLibro)
 {
+    /* Verifica si existr una reserva en la tabla */
     int indice = hash(isbnLibro, tabla->max);
     Entrada *actual = tabla->tabla[indice];
 
+    // Busca la entrada con el isbn del libro
     while (actual != NULL)
     {
         if (actual->isbn == isbnLibro)
         {
+            // Cuando lo encuentra, verifica su cola de prioridad
             return estaTColaDePrioridadReservas(actual->colaPrioridad, ciSocio, isbnLibro);
         }
         actual = actual->siguiente;
     }
 
-    return false;
+    return false; // No encontró el libro
 }
 
 TColaDePrioridadReservas obtenerReservaTTablaReserva(TTablaReserva tabla, int isbn)
 {
-    //  Función para obtener toda la cola de reservas del libro asociado
-    //  al isbn dado.
-    //  PRE: perteneceTTablaReserva(tabla, isbn)
-    //  La función es O(1) promedio.
+   int indice = hash(isbn, tabla->max);
+   Entrada* actual = tabla->tabla[indice];
+
+   while(actual != NULL)
+   {
+        if (actual->isbn == isbn)
+        {
+            return actual->colaPrioridad;
+        }
+        actual = actual->siguiente;
+   }    
     return NULL;
 }
 
 TReserva obtenerSigReservaTTablaReserva(TTablaReserva tabla, int isbn)
 {
+    /* Obtiene la siguiente reserva segun prioridad */
     TColaDePrioridadReservas cola = obtenerReservaTTablaReserva(tabla, isbn);
     if (cola != NULL && !estaVaciaTColaDePrioridadReservas(cola))
     {
@@ -86,9 +115,11 @@ TReserva obtenerSigReservaTTablaReserva(TTablaReserva tabla, int isbn)
 
 void liberarTTablaReserva(TTablaReserva &tabla)
 {
+    /* Libera toda la memoria de la tabla */
     if (tabla == NULL)
         return;
 
+    // Recorre la lista
     for (int i = 0; i < tabla->max; i++)
     {
         Entrada *actual = tabla->tabla[i];
@@ -96,12 +127,14 @@ void liberarTTablaReserva(TTablaReserva &tabla)
         {
             Entrada *aBorrar = actual;
             actual = actual->siguiente;
+
+            // Libera la cola de prioridad
             liberarTColaDePrioridadReservas(aBorrar->colaPrioridad);
-            delete aBorrar;
+            delete aBorrar; // Libera la entrada
         }
     }
 
-    delete[] tabla->tabla;
-    delete tabla;
+    delete[] tabla->tabla; // Libera el array
+    delete tabla;          // Libera la estructura
     tabla = NULL;
 }
