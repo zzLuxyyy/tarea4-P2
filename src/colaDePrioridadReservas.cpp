@@ -124,7 +124,7 @@ void invertirPrioridadTColaDePrioridadReservas(TColaDePrioridadReservas &cp)
 
 void liberarTColaDePrioridadReservas(TColaDePrioridadReservas &cp)
 {
-    if(cp != NULL)
+    if (cp != NULL)
     {
         nat i = 1;
         while (i <= cp->cantidad)
@@ -159,24 +159,93 @@ TReserva prioritarioTColaDePrioridadReservas(TColaDePrioridadReservas cp)
 
 void eliminarPrioritarioTColaDePrioridadReservas(TColaDePrioridadReservas &cp)
 {
-    
+    if (cp->cantidad > 0) // Si la cola no está vacia
+    {
+        liberarTReserva(cp->elementos[1]);              // liberar reserva prioritaria
+        cp->elementos[1] = cp->elementos[cp->cantidad]; // mover a ultimo a la raiz
+        cp->prioridades[1] = cp->prioridades[cp->cantidad];
+        cp->cantidad--; // decrementar cantidad
+
+        if (cp->cantidad > 0)
+        {
+            filtradoDes(cp, 1); // restaurar prioridad
+        }
+    }
 }
 
 bool estaTColaDePrioridadReservas(TColaDePrioridadReservas cp, int ciSocio, int isbnLibro)
 {
-    return false;
+    nat i = 1;
+    bool encontrado = false;
+
+    while (i <= cp->cantidad && !encontrado)
+    {
+        TSocio socio = socioTReserva(cp->elementos[i]);
+        TLibro libro = libroTReserva(cp->elementos[i]);
+
+        // Comparar ci del socio e isbn del libro
+        if (ciTSocio(socio) == ciSocio && isbnTLibro(libro) == isbnLibro)
+        {
+            encontrado = true;
+        }
+        i++;
+    }
+    return encontrado;
 }
 
 nat prioridadTColaDePrioridadReservas(TColaDePrioridadReservas cp, int ciSocio, int isbnLibro)
 {
-    return 0;
+    nat i = 1;
+    nat prioEncontrada = 0;
+    bool encontrado = false;
+
+    while (i <= cp->cantidad && !encontrado)
+    {
+        TSocio socio = socioTReserva(cp->elementos[i]);
+        TLibro libro = libroTReserva(cp->elementos[i]);
+        if (ciTSocio(socio) == ciSocio && isbnTLibro(libro) == isbnLibro)
+        {
+            prioEncontrada = cp->prioridades[i]; // Retornar la prio guardada
+            encontrado = true;
+        }
+        i++;
+    }
+
+    return prioEncontrada;
 }
 
 TColaDePrioridadReservas copiarTColaDePrioridadReservas(TColaDePrioridadReservas cp)
 {
-    return NULL;
+    TColaDePrioridadReservas copia = crearTColaDePrioridadReservas(cp->capacidad);
+    copia->cantidad = cp->cantidad;
+    copia->menorPrioritario = cp->menorPrioritario;
+
+    nat i = 1;
+    while (i <= cp->cantidad)
+    {
+        copia->elementos[i] = copiarTReserva(cp->elementos[i]);
+        copia->prioridades[i] = cp->prioridades[i];
+        i++;
+    }
+
+    return copia;
 }
 
 void imprimirTColaDePrioridad(TColaDePrioridadReservas cp)
 {
+    if (cp->cantidad > 0) // Solo imprimir si la cola no es vacia
+    {
+        // Hacer una copia para no modificar el original
+        TColaDePrioridadReservas copia = copiarTColaDePrioridadReservas(cp);
+
+        // Ir eliminando e imprimiendo el prio hasta vaciar la cola
+        while (!estaVaciaTColaDePrioridadReservas(copia))
+        {
+            TReserva res = prioritarioTColaDePrioridadReservas(copia);
+            imprimirTReserva(res);
+            eliminarPrioritarioTColaDePrioridadReservas(copia);
+        }
+
+        liberarTColaDePrioridadReservas(copia);
+    }
 }
