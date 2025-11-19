@@ -41,7 +41,7 @@ static nat hijoIzq(nat i)
 
 static nat hijoDer(nat i)
 {
-    return 2 * 1 + 1;
+    return 2 * i + 1;
 }
 
 static bool esMasPrioritario(nat p1, nat p2, bool menorPrioritario)
